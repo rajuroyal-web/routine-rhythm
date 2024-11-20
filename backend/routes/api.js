@@ -47,26 +47,5 @@ router.get('/:userId/dates/all', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}
-// added afterwards
-   router.post('/:userId/:date', async (req, res) => {
-  try {
-    const data = await UserData.findOneAndUpdate(
-      { 
-        userId: req.params.userId,
-        date: req.params.date
-      },
-      {
-        userId: req.params.userId,
-        date: req.params.date,
-        data: req.body
-      },
-      { new: true, upsert: true }
-    );
-    res.json(data.data);
-  } catch (error) {
-    console.error('Error saving data:', error);
-    res.status(500).json({ message: error.message });
-  }
 });
 module.exports = router;
