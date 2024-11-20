@@ -3,7 +3,7 @@ let data = {};
 let isEditMode = false;
 const password = '@The_yuvaraj';
 
-const API_URL = 'http://localhost:5000/api/data';
+const API_URL = 'https://your-render-url.onrender.com/api/data';
 const USER_ID = 'default-user'; // You can implement proper user authentication later
 
 async function fetchData(date) {
