@@ -3,16 +3,20 @@ let data = {};
 let isEditMode = false;
 const password = '@The_yuvaraj';
 
-const API_URL = 'https://your-render-app-name.onrender.com/api/data';
-const USER_ID = 'default-user'; // You can implement proper user authentication later
+const API_URL = 'https://routine-rhythm.onrender.com/api/data';
+const USER_ID = 'default-user';
 
 async function fetchData(date) {
   try {
     const response = await fetch(`${API_URL}/${USER_ID}/${date}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const fetchedData = await response.json();
     return fetchedData;
   } catch (error) {
     console.error('Error fetching data:', error);
+    alert(`Error fetching data: ${error.message}`);
     return {};
   }
 }
@@ -26,35 +30,44 @@ async function saveDataToServer(date, data) {
       },
       body: JSON.stringify(data),
     });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     const savedData = await response.json();
     return savedData;
   } catch (error) {
     console.error('Error saving data:', error);
+    alert(`Error saving data: ${error.message}`);
     return null;
   }
 }
 
 async function renderAll() {
-  const fetchedData = await fetchData(currentDate);
-  data[currentDate] = fetchedData;
-  
-  document.getElementById('dateInput').value = currentDate;
-  renderMood();
-  renderEnergyLevel();
-  renderWeather();
-  renderSleepSchedule();
-  renderTodoList();
-  renderMotivation();
-  renderGoals();
-  renderExpenseTracker();
-  renderHabits();
-  renderWaterIntake();
-  renderNotes();
-  renderMeals();
-  updateEditableState();
-  renderCalendar();
-  updateNoteButtonState();
-  showNoteOnVisit();
+  try {
+    const fetchedData = await fetchData(currentDate);
+    data[currentDate] = fetchedData;
+    
+    document.getElementById('dateInput').value = currentDate;
+    renderMood();
+    renderEnergyLevel();
+    renderWeather();
+    renderSleepSchedule();
+    renderTodoList();
+    renderMotivation();
+    renderGoals();
+    renderExpenseTracker();
+    renderHabits();
+    renderWaterIntake();
+    renderNotes();
+    renderMeals();
+    updateEditableState();
+    renderCalendar();
+    updateNoteButtonState();
+    showNoteOnVisit();
+  } catch (error) {
+    console.error('Error rendering data:', error);
+    alert(`Error rendering data: ${error.message}`);
+  }
 }
 
 function updateEditableState() {
@@ -339,14 +352,19 @@ function renderMeals() {
 
 async function saveData() {
   if (isEditMode) {
-    const savedData = await saveDataToServer(currentDate, data[currentDate]);
-    if (savedData) {
-      alert('Data saved successfully!');
-      isEditMode = false;
-      updateEditableState();
-      renderCalendar();
-    } else {
-      alert('Error saving data. Please try again.');
+    try {
+      const savedData = await saveDataToServer(currentDate, data[currentDate]);
+      if (savedData) {
+        alert('Data saved successfully!');
+        isEditMode = false;
+        updateEditableState();
+        renderCalendar();
+      } else {
+        throw new Error('Failed to save data');
+      }
+    } catch (error) {
+      console.error('Error saving data:', error);
+      alert(`Error saving data: ${error.message}`);
     }
   }
 }
