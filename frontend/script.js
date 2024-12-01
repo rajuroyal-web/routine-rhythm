@@ -48,22 +48,33 @@ async function renderAll() {
     data[currentDate] = fetchedData;
     
     document.getElementById('dateInput').value = currentDate;
-    renderMood();
-    renderEnergyLevel();
-    renderWeather();
-    renderSleepSchedule();
-    renderTodoList();
-    renderMotivation();
-    renderGoals();
-    renderExpenseTracker();
-    renderHabits();
-    renderWaterIntake();
-    renderNotes();
-    renderMeals();
-    updateEditableState();
-    renderCalendar();
-    updateNoteButtonState();
-    showNoteOnVisit();
+    
+    const renderFunctions = [
+      { name: 'renderMood', func: renderMood },
+      { name: 'renderEnergyLevel', func: renderEnergyLevel },
+      { name: 'renderWeather', func: renderWeather },
+      { name: 'renderSleepSchedule', func: renderSleepSchedule },
+      { name: 'renderTodoList', func: renderTodoList },
+      { name: 'renderMotivation', func: renderMotivation },
+      { name: 'renderGoals', func: renderGoals },
+      { name: 'renderExpenseTracker', func: renderExpenseTracker },
+      { name: 'renderHabits', func: renderHabits },
+      { name: 'renderWaterIntake', func: renderWaterIntake },
+      { name: 'renderNotes', func: renderNotes },
+      { name: 'renderMeals', func: renderMeals },
+      { name: 'updateEditableState', func: updateEditableState },
+      { name: 'renderCalendar', func: renderCalendar },
+      { name: 'updateNoteButtonState', func: updateNoteButtonState },
+      { name: 'showNoteOnVisit', func: showNoteOnVisit }
+    ];
+
+    for (const { name, func } of renderFunctions) {
+      try {
+        func();
+      } catch (error) {
+        console.error(`Error in ${name}:`, error);
+      }
+    }
   } catch (error) {
     console.error('Error rendering data:', error);
     alert(`Error rendering data: ${error.message}`);
