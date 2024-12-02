@@ -13,7 +13,7 @@ async function fetchData(date) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const fetchedData = await response.json();
-    return fetchedData;
+    return fetchedData || {};
   } catch (error) {
     console.error('Error fetching data:', error);
     alert(`Error fetching data: ${error.message}`);
@@ -45,25 +45,40 @@ async function saveDataToServer(date, data) {
 async function renderAll() {
   try {
     const fetchedData = await fetchData(currentDate);
-    data[currentDate] = fetchedData;
+    data[currentDate] = fetchedData || {};
     
-    document.getElementById('dateInput').value = currentDate;
-    renderMood();
-    renderEnergyLevel();
-    renderWeather();
-    renderSleepSchedule();
-    renderTodoList();
-    renderMotivation();
-    renderGoals();
-    renderExpenseTracker();
-    renderHabits();
-    renderWaterIntake();
-    renderNotes();
-    renderMeals();
-    updateEditableState();
-    renderCalendar();
-    updateNoteButtonState();
-    showNoteOnVisit();
+    const dateInput = document.getElementById('dateInput');
+    if (dateInput) {
+      dateInput.value = currentDate;
+    }
+
+    const renderFunctions = [
+      { name: 'renderMood', func: renderMood },
+      { name: 'renderEnergyLevel', func: renderEnergyLevel },
+      { name: 'renderWeather', func: renderWeather },
+      { name: 'renderSleepSchedule', func: renderSleepSchedule },
+      { name: 'renderTodoList', func: renderTodoList },
+      { name: 'renderMotivation', func: renderMotivation },
+      { name: 'renderGoals', func: renderGoals },
+      { name: 'renderExpenseTracker', func: renderExpenseTracker },
+      { name: 'renderHabits', func: renderHabits },
+      { name: 'renderWaterIntake', func: renderWaterIntake },
+      { name: 'renderNotes', func: renderNotes },
+      { name: 'renderMeals', func: renderMeals },
+      { name: 'updateEditableState', func: updateEditableState },
+      { name: 'updateNoteButtonState', func: updateNoteButtonState },
+      { name: 'showNoteOnVisit', func: showNoteOnVisit }
+    ];
+
+    for (const { name, func } of renderFunctions) {
+      try {
+        if (typeof func === 'function') {
+          func();
+        }
+      } catch (error) {
+        console.error(`Error in ${name}:`, error);
+      }
+    }
   } catch (error) {
     console.error('Error rendering data:', error);
     alert(`Error rendering data: ${error.message}`);
@@ -75,7 +90,10 @@ function updateEditableState() {
   editableElements.forEach(el => {
     el.disabled = !isEditMode;
   });
-  document.getElementById('saveButton').disabled = !isEditMode;
+  const saveButton = document.getElementById('saveButton');
+  if (saveButton) {
+    saveButton.disabled = !isEditMode;
+  }
 }
 
 function setMood(mood) {
@@ -121,8 +139,10 @@ function renderWeather() {
 }
 
 function renderSleepSchedule() {
-  document.getElementById('wakeTime').value = data[currentDate]?.wakeTime || '';
-  document.getElementById('sleepTime').value = data[currentDate]?.sleepTime || '';
+  const wakeTime = document.getElementById('wakeTime');
+  const sleepTime = document.getElementById('sleepTime');
+  if (wakeTime) wakeTime.value = data[currentDate]?.wakeTime || '';
+  if (sleepTime) sleepTime.value = data[currentDate]?.sleepTime || '';
 }
 
 function addTodo() {
@@ -136,6 +156,8 @@ function addTodo() {
 
 function renderTodoList() {
   const todoList = document.getElementById('todoList');
+  if (!todoList) return;
+
   todoList.innerHTML = '';
   data[currentDate]?.todos?.forEach((todo, index) => {
     const todoItem = document.createElement('div');
@@ -166,7 +188,8 @@ function renderTodoList() {
 }
 
 function renderMotivation() {
-  document.getElementById('motivation').value = data[currentDate]?.motivation || '';
+  const motivation = document.getElementById('motivation');
+  if (motivation) motivation.value = data[currentDate]?.motivation || '';
 }
 
 function addGoal() {
@@ -180,6 +203,8 @@ function addGoal() {
 
 function renderGoals() {
   const goalList = document.getElementById('goalList');
+  if (!goalList) return;
+
   goalList.innerHTML = '';
   data[currentDate]?.goals?.forEach((goal, index) => {
     const goalItem = document.createElement('div');
@@ -211,10 +236,10 @@ function renderGoals() {
 
 function addTransaction() {
   if (isEditMode) {
-    const type = document.getElementById('transactionType').value;
-    const category = document.getElementById('category').value;
-    const amount = document.getElementById('amount').value;
-    const description = document.getElementById('description').value;
+    const type = document.getElementById('transactionType')?.value;
+    const category = document.getElementById('category')?.value;
+    const amount = document.getElementById('amount')?.value;
+    const description = document.getElementById('description')?.value;
 
     if (category && amount) {
       if (!data[currentDate]) data[currentDate] = {};
@@ -222,15 +247,21 @@ function addTransaction() {
       data[currentDate].transactions.push({ type, category, amount, description });
       renderExpenseTracker();
       
-      document.getElementById('category').value = '';
-      document.getElementById('amount').value = '';
-      document.getElementById('description').value = '';
+      const categoryInput = document.getElementById('category');
+      const amountInput = document.getElementById('amount');
+      const descriptionInput = document.getElementById('description');
+      if (categoryInput) categoryInput.value = '';
+      if (amountInput) amountInput.value = '';
+      if (descriptionInput) descriptionInput.value = '';
     }
   }
 }
 
 function renderExpenseTracker() {
   const transactionList = document.getElementById('transactionList');
+  const balanceElement = document.getElementById('balance');
+  if (!transactionList || !balanceElement) return;
+
   transactionList.innerHTML = '';
   let balance = 0;
 
@@ -260,13 +291,14 @@ function renderExpenseTracker() {
     balance += transaction.type === 'income' ? parseFloat(transaction.amount) : -parseFloat(transaction.amount);
   });
 
-  const balanceElement = document.getElementById('balance');
   balanceElement.textContent = `Balance: $${balance.toFixed(2)}`;
   balanceElement.className = balance >= 0 ? 'text-success' : 'text-danger';
 }
 
 function renderHabits() {
   const habitList = document.getElementById('habitList');
+  if (!habitList) return;
+
   habitList.innerHTML = '';
   
   const defaultHabits = ['Read', 'Exercise', 'Meditate'];
@@ -290,6 +322,8 @@ function renderHabits() {
 
 function renderWaterIntake() {
   const waterIntake = document.getElementById('waterIntake');
+  if (!waterIntake) return;
+
   waterIntake.innerHTML = '';
   
   for (let i = 0; i < 8; i++) {
@@ -309,7 +343,8 @@ function renderWaterIntake() {
 }
 
 function renderNotes() {
-  document.getElementById('notes').value = data[currentDate]?.notes || '';
+  const notes = document.getElementById('notes');
+  if (notes) notes.value = data[currentDate]?.notes || '';
 }
 
 function addMeal(mealType) {
@@ -326,6 +361,8 @@ function renderMeals() {
   const mealTypes = ['breakfast', 'lunch', 'dinner', 'snacks'];
   mealTypes.forEach(mealType => {
     const mealList = document.getElementById(`${mealType}Items`);
+    if (!mealList) return;
+
     mealList.innerHTML = '';
     data[currentDate]?.meals?.[mealType]?.forEach((meal, index) => {
       const mealItem = document.createElement('div');
@@ -358,7 +395,6 @@ async function saveData() {
         alert('Data saved successfully!');
         isEditMode = false;
         updateEditableState();
-        renderCalendar();
       } else {
         throw new Error('Failed to save data');
       }
@@ -375,12 +411,14 @@ function showPasswordModal() {
 }
 
 function checkPassword() {
-  const enteredPassword = document.getElementById('passwordInput').value;
+  const enteredPassword = document.getElementById('passwordInput')?.value;
   if (enteredPassword === password) {
     isEditMode = true;
     updateEditableState();
     const passwordModal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
-    passwordModal.hide();
+    if (passwordModal) {
+      passwordModal.hide();
+    }
   } else {
     alert('Incorrect password. Please try again.');
   }
@@ -403,91 +441,16 @@ function nextDay() {
   changeDate(nextDate.toISOString().split('T')[0]);
 }
 
-async function renderCalendar() {
-  const calendarContainer = document.getElementById('calendar-container');
-  calendarContainer.innerHTML = '';
-
-  const calendar = document.createElement('div');
-  calendar.className = 'calendar';
-
-  const currentMonth = new Date(currentDate).getMonth();
-  const currentYear = new Date(currentDate).getFullYear();
-
-  const firstDay = new Date(currentYear, currentMonth, 1);
-  const lastDay = new Date(currentYear, currentMonth + 1, 0);
-
-  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-  calendar.innerHTML = `
-    <div class="calendar-header">
-      <button class="btn btn-sm btn-outline-secondary" id="prevMonth">&lt;</button>
-      <h3>${monthNames[currentMonth]} ${currentYear}</h3>
-      <button class="btn btn-sm btn-outline-secondary" id="nextMonth">&gt;</button>
-    </div>
-    <table class="table table-bordered">
-      <thead>
-        <tr>
-          <th>Sun</th>
-          <th>Mon</th>
-          <th>Tue</th>
-          <th>Wed</th>
-          <th>Thu</th>
-          <th>Fri</th>
-          <th>Sat</th>
-        </tr>
-      </thead>
-      <tbody id="calendarBody"></tbody>
-    </table>
-  `;
-
-  calendarContainer.appendChild(calendar);
-
-  const calendarBody = document.getElementById('calendarBody');
-
-  let date = 1;
-  for (let i = 0; i < 6; i++) {
-    const row = document.createElement('tr');
-    for (let j = 0; j < 7; j++) {
-      if (i === 0 && j < firstDay.getDay()) {
-        row.appendChild(document.createElement('td'));
-      } else if (date > lastDay.getDate()) {
-        break;
-      } else {
-        const cell = document.createElement('td');
-        cell.textContent = date;
-        const cellDate = new Date(currentYear, currentMonth, date).toISOString().split('T')[0];
-        if (cellDate === currentDate) {
-          cell.classList.add('bg-primary', 'text-white');
-        }
-        cell.addEventListener('click', () => changeDate(cellDate));
-        row.appendChild(cell);
-        date++;
-      }
-    }
-    calendarBody.appendChild(row);
-  }
-
-  document.getElementById('prevMonth').addEventListener('click', () => {
-    const newDate = new Date(currentYear, currentMonth - 1, 1);
-    changeDate(newDate.toISOString().split('T')[0]);
-  });
-
-  document.getElementById('nextMonth').addEventListener('click', () => {
-    const newDate = new Date(currentYear, currentMonth + 1, 1);
-    changeDate(newDate.toISOString().split('T')[0]);
-  });
-}
-
 function updateNoteButtonState() {
   const noteButton = document.getElementById('noteHighlight');
   const noteBadge = document.getElementById('noteBadge');
   
   if (data[currentDate]?.notes && data[currentDate].notes.trim() !== '') {
-    noteButton.classList.add('has-note');
-    noteBadge.style.display = 'block';
+    if (noteButton) noteButton.classList.add('has-note');
+    if (noteBadge) noteBadge.style.display = 'block';
   } else {
-    noteButton.classList.remove('has-note');
-    noteBadge.style.display = 'none';
+    if (noteButton) noteButton.classList.remove('has-note');
+    if (noteBadge) noteBadge.style.display = 'none';
   }
 }
 
@@ -496,84 +459,139 @@ function showNoteOnVisit() {
   const noteContent = document.getElementById('noteContent');
   
   if (data[currentDate]?.notes && data[currentDate].notes.trim() !== '') {
-    noteContent.textContent = data[currentDate].notes;
-    noteCard.style.display = 'block';
-    setTimeout(() => {
-      noteCard.classList.add('show');
-    }, 100);
-    setTimeout(() => {
-      noteCard.classList.remove('show');
+    if (noteContent) noteContent.textContent = data[currentDate].notes;
+    if (noteCard) {
+      noteCard.style.display = 'block';
       setTimeout(() => {
-        noteCard.style.display = 'none';
-      }, 300);
-    }, 5000);
+        noteCard.classList.add('show');
+      }, 100);
+      setTimeout(() => {
+        noteCard.classList.remove('show');
+        setTimeout(() => {
+          noteCard.style.display = 'none';
+        }, 300);
+      }, 5000);
+    }
   }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderAll();
+  try {
+    renderAll();
 
-  document.querySelectorAll('.mood-btn').forEach(btn => {
-    btn.addEventListener('click', () => setMood(btn.dataset.mood));
-  });
+    document.querySelectorAll('.mood-btn').forEach(btn => {
+      btn.addEventListener('click', () => setMood(btn.dataset.mood));
+    });
 
-  document.querySelectorAll('.energy-btn').forEach(btn => {
-    btn.addEventListener('click', () => setEnergyLevel(btn.dataset.energy));
-  });
+    document.querySelectorAll('.energy-btn').forEach(btn => {
+      btn.addEventListener('click', () => setEnergyLevel(btn.dataset.energy));
+    });
 
-  document.querySelectorAll('.weather-btn').forEach(btn => {
-    btn.addEventListener('click', () => setWeather(btn.dataset.weather));
-  });
+    document.querySelectorAll('.weather-btn').forEach(btn => {
+      btn.addEventListener('click', () => setWeather(btn.dataset.weather));
+    });
 
-  document.getElementById('wakeTime').addEventListener('change', (e) => {
-    if (isEditMode) {
-      if (!data[currentDate]) data[currentDate] = {};
-      data[currentDate].wakeTime = e.target.value;
+    const wakeTime = document.getElementById('wakeTime');
+    const sleepTime = document.getElementById('sleepTime');
+    if (wakeTime) {
+      wakeTime.addEventListener('change', (e) => {
+        if (isEditMode) {
+          if (!data[currentDate]) data[currentDate] = {};
+          data[currentDate].wakeTime = e.target.value;
+        }
+      });
     }
-  });
-
-  document.getElementById('sleepTime').addEventListener('change', (e) => {
-    if (isEditMode) {
-      if (!data[currentDate]) data[currentDate] = {};
-      data[currentDate].sleepTime = e.target.value;
+    if (sleepTime) {
+      sleepTime.addEventListener('change', (e) => {
+        if (isEditMode) {
+          if (!data[currentDate]) data[currentDate] = {};
+          data[currentDate].sleepTime = e.target.value;
+        }
+      });
     }
-  });
 
-  document.getElementById('addTodo').addEventListener('click', addTodo);
-
-  document.getElementById('motivation').addEventListener('input', (e) => {
-    if (isEditMode) {
-      if (!data[currentDate]) data[currentDate] = {};
-      data[currentDate].motivation = e.target.value;
+    const addTodoBtn = document.getElementById('addTodo');
+    if (addTodoBtn) {
+      addTodoBtn.addEventListener('click', addTodo);
     }
-  });
 
-  document.getElementById('addGoal').addEventListener('click', addGoal);
-
-  document.getElementById('addTransaction').addEventListener('click', addTransaction);
-
-  document.getElementById('notes').addEventListener('input', (e) => {
-    if (isEditMode) {
-      if (!data[currentDate]) data[currentDate] = {};
-      data[currentDate].notes = e.target.value;
+    const motivationInput = document.getElementById('motivation');
+    if (motivationInput) {
+      motivationInput.addEventListener('input', (e) => {
+        if (isEditMode) {
+          if (!data[currentDate]) data[currentDate] = {};
+          data[currentDate].motivation = e.target.value;
+        }
+      });
     }
-  });
 
-  document.querySelectorAll('.addMeal').forEach(btn => {
-    btn.addEventListener('click', () => addMeal(btn.dataset.meal));
-  });
+    const addGoalBtn = document.getElementById('addGoal');
+    if (addGoalBtn) {
+      addGoalBtn.addEventListener('click', addGoal);
+    }
 
-  document.getElementById('saveButton').addEventListener('click', saveData);
-  document.getElementById('editButton').addEventListener('click', showPasswordModal);
-  document.getElementById('submitPassword').addEventListener('click', checkPassword);
+    const addTransactionBtn = document.getElementById('addTransaction');
+    if (addTransactionBtn) {
+      addTransactionBtn.addEventListener('click', addTransaction);
+    }
 
-  document.getElementById('dateInput').addEventListener('change', (e) => changeDate(e.target.value));
-  document.getElementById('prevDay').addEventListener('click', prevDay);
-  document.getElementById('nextDay').addEventListener('click', nextDay);
+    const notesInput = document.getElementById('notes');
+    if (notesInput) {
+      notesInput.addEventListener('input', (e) => {
+        if (isEditMode) {
+          if (!data[currentDate]) data[currentDate] = {};
+          data[currentDate].notes = e.target.value;
+        }
+      });
+    }
 
-  document.getElementById('noteHighlight').addEventListener('click', () => {
-    const noteModal = new bootstrap.Modal(document.getElementById('noteModal'));
-    document.getElementById('modalNoteContent').textContent = data[currentDate]?.notes || 'No note for today.';
-    noteModal.show();
-  });
+    document.querySelectorAll('.addMeal').forEach(btn => {
+      btn.addEventListener('click', () => addMeal(btn.dataset.meal));
+    });
+
+    const saveButton = document.getElementById('saveButton');
+    if (saveButton) {
+      saveButton.addEventListener('click', saveData);
+    }
+
+    const editButton = document.getElementById('editButton');
+    if (editButton) {
+      editButton.addEventListener('click', showPasswordModal);
+    }
+
+    const submitPasswordBtn = document.getElementById('submitPassword');
+    if (submitPasswordBtn) {
+      submitPasswordBtn.addEventListener('click', checkPassword);
+    }
+
+    const dateInput = document.getElementById('dateInput');
+    if (dateInput) {
+      dateInput.addEventListener('change', (e) => changeDate(e.target.value));
+    }
+
+    const prevDayBtn = document.getElementById('prevDay');
+    if (prevDayBtn) {
+      prevDayBtn.addEventListener('click', prevDay);
+    }
+
+    const nextDayBtn = document.getElementById('nextDay');
+    if (nextDayBtn) {
+      nextDayBtn.addEventListener('click', nextDay);
+    }
+
+    const noteHighlightBtn = document.getElementById('noteHighlight');
+    if (noteHighlightBtn) {
+      noteHighlightBtn.addEventListener('click', () => {
+        const noteModal = new bootstrap.Modal(document.getElementById('noteModal'));
+        const modalNoteContent = document.getElementById('modalNoteContent');
+        if (modalNoteContent) {
+          modalNoteContent.textContent = data[currentDate]?.notes || 'No note for today.';
+        }
+        noteModal.show();
+      });
+    }
+  } catch (error) {
+    console.error('Error initializing application:', error);
+    alert(`Error initializing application: ${error.message}`);
+  }
 });

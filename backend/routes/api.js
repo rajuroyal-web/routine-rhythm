@@ -1,6 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const UserData = require('../models/UserData');
+const mongoose = require('mongoose');
+
+// Health check endpoint
+router.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'Server is running' });
+});
 
 // Get data for a specific date
 router.get('/:userId/:date', async (req, res) => {
@@ -11,7 +17,8 @@ router.get('/:userId/:date', async (req, res) => {
     });
     res.json(data ? data.data : {});
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error fetching data:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
@@ -32,7 +39,8 @@ router.post('/:userId/:date', async (req, res) => {
     );
     res.json(data.data);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error saving data:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 
@@ -45,7 +53,15 @@ router.get('/:userId/dates/all', async (req, res) => {
     );
     res.json(dates.map(d => d.date));
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error fetching dates:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
+// Error handling middleware
+router.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!', error: err.message });
+});
+
 module.exports = router;
