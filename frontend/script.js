@@ -1,6 +1,6 @@
 let currentDate = new Date().toISOString().split('T')[0];
 let data = {};
-let isEditMode = false;
+let isEditMode = true;
 const password = '@The_yuvaraj';
 
 const API_URL = 'https://routine-rhythm.onrender.com/api/data';
